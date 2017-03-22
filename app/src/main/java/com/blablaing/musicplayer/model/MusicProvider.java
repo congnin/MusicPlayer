@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.blablaing.musicplayer.utils.MediaIDHelper.MEDIA_ID_MUSICS_BY_GENRE;
 import static com.blablaing.musicplayer.utils.MediaIDHelper.MEDIA_ID_ROOT;
+import static com.blablaing.musicplayer.utils.MediaIDHelper.createMediaID;
 
 /**
  * Created by Linh on 3/22/2017.
@@ -289,7 +290,7 @@ public class MusicProvider {
         // when we get a onPlayFromMusicID call, so we can create the proper queue based
         // on where the music was selected from (by artist, by genre, random, etc)
         String genre = metadata.getString(MediaMetadataCompat.METADATA_KEY_GENRE);
-        String hierarchyAwareMediaID = MediaIDHelper.createMediaID(
+        String hierarchyAwareMediaID = createMediaID(
                 metadata.getDescription().getMediaId(), MEDIA_ID_MUSICS_BY_GENRE, genre);
         MediaMetadataCompat copy = new MediaMetadataCompat.Builder(metadata)
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, hierarchyAwareMediaID)
