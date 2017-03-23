@@ -1,15 +1,24 @@
 package com.blablaing.musicplayer.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.blablaing.musicplayer.R;
 import com.blablaing.musicplayer.utils.MediaIDHelper;
 
 /**
@@ -30,8 +39,82 @@ public class MediaItemViewHolder {
     TextView mTitleView;
     TextView mDescriptionView;
 
-    public static Drawable getDrawableByState(Context context, int state){
-        
+    static View setupListView(Activity activity, View convertView, ViewGroup parent,
+                              MediaBrowserCompat.MediaItem item) {
+        if (sColorStateNotPlaying == null || sColorStatePlaying == null) {
+            initializeColorStateLists(activity);
+        }
+
+        MediaItemViewHolder holder;
+
+        Integer cachedState = STATE_INVALID;
+
+        if (convertView == null) {
+            convertView = LayoutInflater.from(activity)
+                    .inflate(R.layout.media_list_item, parent, false);
+            holder = new MediaItemViewHolder();
+            holder.mImageView = (ImageView) convertView.findViewById(R.id.play_eq);
+            holder.mTitleView = (TextView) convertView.findViewById(R.id.title);
+            holder.mDescriptionView = (TextView) convertView.findViewById(R.id.description);
+            convertView.setTag(holder);
+        } else {
+            holder = (MediaItemViewHolder) convertView.getTag();
+            cachedState = (Integer) convertView.getTag(R.id.tag_mediaitem_state_cache);
+        }
+
+        MediaDescriptionCompat description = item.getDescription();
+        holder.mTitleView.setText(description.getTitle());
+        holder.mDescriptionView.setText(description.getSubtitle());
+
+        // If the state of convertView is different, we need to adapt the view to the
+        // new state.
+        int state = getMediaItemState(activity, item);
+        if (cachedState == null || cachedState != state) {
+            Drawable drawable = getDrawableByState(activity, state);
+            if (drawable != null) {
+                holder.mImageView.setImageDrawable(drawable);
+                holder.mImageView.setVisibility(View.VISIBLE);
+            } else {
+                holder.mImageView.setVisibility(View.GONE);
+            }
+            convertView.setTag(R.id.tag_mediaitem_state_cache, state);
+        }
+
+        return convertView;
+    }
+
+    private static void initializeColorStateLists(Context context) {
+        sColorStateNotPlaying = ColorStateList.valueOf(context.getResources().getColor(
+                R.color.media_item_icon_not_playing));
+        sColorStatePlaying = ColorStateList.valueOf(context.getResources().getColor(
+                R.color.media_item_icon_playing));
+    }
+
+    public static Drawable getDrawableByState(Context context, int state) {
+        if (sColorStateNotPlaying == null || sColorStateNotPlaying == null) {
+            initializeColorStateLists(context);
+        }
+
+        switch (state) {
+            case STATE_PLAYABLE:
+                Drawable pauseDrawable = ContextCompat.getDrawable(context,
+                        R.drawable.ic_play_arrow_black_36dp);
+                DrawableCompat.setTintList(pauseDrawable, sColorStateNotPlaying);
+                return pauseDrawable;
+            case STATE_PLAYING:
+                AnimationDrawable animation = (AnimationDrawable)
+                        ContextCompat.getDrawable(context, R.drawable.ic_equalizer_white_36dp);
+                DrawableCompat.setTintList(animation, sColorStatePlaying);
+                animation.start();
+                return animation;
+            case STATE_PAUSED:
+                Drawable playDrawable = ContextCompat.getDrawable(context,
+                        R.drawable.ic_equalizer1_white_36dp);
+                DrawableCompat.setTintList(playDrawable, sColorStatePlaying);
+                return playDrawable;
+            default:
+                return null;
+        }
     }
 
     public static int getMediaItemState(Context context, MediaBrowserCompat.MediaItem mediaItem) {
