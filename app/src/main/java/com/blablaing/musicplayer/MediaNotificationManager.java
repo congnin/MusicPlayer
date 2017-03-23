@@ -19,6 +19,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 
+import com.blablaing.musicplayer.ui.MusicPlayerActivity;
 import com.blablaing.musicplayer.utils.LogHelper;
 import com.blablaing.musicplayer.utils.ResourceHelper;
 
@@ -167,7 +168,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
     }
 
     private PendingIntent createContentIntent(MediaDescriptionCompat descriptionCompat) {
-        Intent openUI = new Intent(mService, MusicPlayActivity.class)
+        Intent openUI = new Intent(mService, MusicPlayerActivity.class);
     }
 
     private final MediaControllerCompat.Callback mCb = new MediaControllerCompat.Callback() {
