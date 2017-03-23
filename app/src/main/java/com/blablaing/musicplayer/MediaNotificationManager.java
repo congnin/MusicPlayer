@@ -5,8 +5,10 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
@@ -18,6 +20,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 
 import com.blablaing.musicplayer.utils.LogHelper;
+import com.blablaing.musicplayer.utils.ResourceHelper;
 
 /**
  * Created by congnc on 3/23/17.
@@ -58,7 +61,49 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
     public MediaNotificationManager(MusicService service) throws RemoteException {
         mService = service;
+        updateSessionToken();
 
+        mNotificationColor = ResourceHelper.getThemeColor(mService, R.attr.colorPrimary,
+                Color.DKGRAY);
+
+        mNotificationManager = NotificationManagerCompat.from(service);
+
+        String pkg = mService.getPackageName();
+        mPauseIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mPlayIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mPreviousIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mNextIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        mStopCastIntent = PendingIntent.getBroadcast(mService, REQUEST_CODE,
+                new Intent(ACTION_STOP_CASTING).setPackage(pkg),
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
+        mNotificationManager.cancelAll();
+    }
+
+    public void startNotification() {
+        if (!mStarted) {
+            mMetadata = mController.getMetadata();
+            mPlaybackState = mController.getPlaybackState();
+
+            Notification notification = createNotification();
+            if (notification != null) {
+                mController.registerCallback(mCb);
+                IntentFilter filter = new IntentFilter();
+                filter.addAction(ACTION_NEXT);
+                filter.addAction(ACTION_PAUSE);
+                filter.addAction(ACTION_PLAY);
+                filter.addAction(ACTION_PREV);
+                filter.addAction(ACTION_STOP_CASTING);
+                mService.registerReceiver(this, filter);
+
+                mService.startForeground(NOTIFICATION_ID, notification);
+                mStarted = true;
+            }
+        }
     }
 
     public void stopNotification() {
@@ -111,10 +156,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 mController.unregisterCallback(mCb);
             }
             mSessionToken = freshToken;
-            if(mSessionToken != null){
+            if (mSessionToken != null) {
                 mController = new MediaControllerCompat(mService, mSessionToken);
                 mTransportControls = mController.getTransportControls();
-                if(mStarted){
+                if (mStarted) {
                     mController.registerCallback(mCb);
                 }
             }
