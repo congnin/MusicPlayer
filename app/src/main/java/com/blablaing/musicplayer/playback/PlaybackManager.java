@@ -46,7 +46,7 @@ public class PlaybackManager implements Playback.Callback {
         return mMediaSessionCallback;
     }
 
-    private void handlePlayRequest() {
+    public void handlePlayRequest() {
         LogHelper.d(TAG, "handlePauseRequest: mState=" + mPlayback.getState());
         if (mPlayback.isPlaying()) {
             mPlayback.pause();

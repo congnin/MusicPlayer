@@ -169,6 +169,13 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
     private PendingIntent createContentIntent(MediaDescriptionCompat descriptionCompat) {
         Intent openUI = new Intent(mService, MusicPlayerActivity.class);
+        openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        openUI.putExtra(MusicPlayerActivity.EXTRA_START_FULLSCREEN, true);
+        if (descriptionCompat != null) {
+            openUI.putExtra(MusicPlayerActivity.EXTRA_CURRENT_MEDIA_DESCRIPTION, descriptionCompat);
+        }
+        return PendingIntent.getActivity(mService, REQUEST_CODE, openUI,
+                PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     private final MediaControllerCompat.Callback mCb = new MediaControllerCompat.Callback() {
@@ -196,7 +203,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
             }
         }
-    }
+    };
 
     private Notification createNotification() {
         LogHelper.d(TAG, "updateNotificationMetadata. mMetadata=" + mMetadata);
@@ -249,7 +256,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 .setLargeIcon(art);
 
         if (mController != null && mController.getExtras() != null) {
-            String castName = mController.getExtras().getString(MusicService.EXTRA_CONNECTION_CAST);
+            String castName = mController.getExtras().getString(MusicService.EXTRA_CONNECTED_CAST);
             if (castName != null) {
                 String castInfo = mService.getResources()
                         .getString(R.string.casting_to_device, castName);
