@@ -21,6 +21,11 @@ public class MediaBrowserFragment extends Fragment {
 
     private static final String ARG_MEDIA_ID = "media_id";
 
+    private BrowseAdapter mBrowserAdapter;
+    private String mMediaId;
+    private MediaFragmentListener mMediaFragmentListener;
+    private View mErrorView;
+
     private static class BrowseAdapter extends ArrayAdapter<MediaBrowserCompat.MediaItem> {
 
         public BrowseAdapter(Activity context) {
